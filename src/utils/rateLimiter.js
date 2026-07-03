@@ -194,9 +194,9 @@ class RateLimiter {
         return base;
     }
 
-    async addHumanizedDelay(min = 100, max = 350) { // Reduced delays
-        const delay = Math.floor(Math.random() * (max - min + 1)) + min;
-        await new Promise(resolve => setTimeout(resolve, delay));
+    async addHumanizedDelay(min = 100, max = 350) {
+        // Speed mode: humanized send delay disabled — no artificial wait.
+        return;
     }
 
     /**

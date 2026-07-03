@@ -1,6 +1,6 @@
 {
   "name": "hinata-fca",
-  "version": "1.0.10",
+  "version": "1.0.10-fast",
   "type": "commonjs",
   "types": "src/types/index.d.ts",
   "description": "Hinata FCA - Advanced Facebook Chat API",

@@ -281,57 +281,34 @@ class AntiSuspension {
     }
 
     async simulateTyping(threadID, messageLength = 50) {
-        const wpm = 38 + Math.random() * 24;
-        const charsPerMs = (wpm * 5) / 60000;
-        const typingDelay = Math.min(1200, Math.max(150, messageLength / charsPerMs));
-        const jitter = (Math.random() - 0.5) * 120;
-        return Math.round(typingDelay + jitter);
+        // Speed mode: typing-simulation delay disabled — returns instantly.
+        return 0;
     }
 
     async addSmartDelay() {
-        const base = 100 + Math.random() * 200;
-        const jitter = (Math.random() - 0.5) * 40;
-        const total = Math.max(60, base + jitter);
-        await new Promise(resolve => setTimeout(resolve, total));
+        // Speed mode: inter-operation delay disabled — no artificial wait.
+        return;
     }
 
     /**
      * Add a longer random delay when volume is running high.
      * Helps avoid patterns that look like automated batch sends.
+     * Speed mode: disabled — no artificial wait, stats still tracked by callers.
      */
     async addAdaptiveDelay(threadID) {
-        const threadCount = this.dailyStats.threadStats.get(String(threadID))?.count || 0;
-        const globalCount = this.dailyStats.messageCount;
-
-        let base = 100;
-        if (globalCount > 1000) base = 400;
-        else if (globalCount > 500) base = 250;
-
-        if (threadCount > 60) base += 150;
-
-        const jitter = Math.random() * base * 0.3;
-        const total = Math.max(60, base + jitter);
-        await new Promise(resolve => setTimeout(resolve, total));
+        return;
     }
 
     async enforceThreadThrottling(threadID) {
         const lastTime = this.lastActivity.get(String(threadID)) || 0;
-        const timeSinceLastMsg = Date.now() - lastTime;
-        const minInterval = this.threadDelayMs + Math.random() * 150;
-
-        if (timeSinceLastMsg < minInterval) {
-            const waitTime = minInterval - timeSinceLastMsg;
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-        }
-
+        // Speed mode: no forced wait between messages to the same thread.
         this.lastActivity.set(String(threadID), Date.now());
         return Date.now() - lastTime;
     }
 
     async enforceMessageRate() {
-        await new Promise(resolve =>
-            setTimeout(resolve, this.messageDelayMs + Math.random() * 100)
-        );
+        // Speed mode: global message-rate delay disabled — no artificial wait.
+        return;
     }
 
     getHumanizedHeaders() {

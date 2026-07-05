@@ -57,7 +57,6 @@ Inspired by **ws3-fca** and **@dongdev/fca-unofficial**
 - Auto re-login using refreshed AppState when session expires
 - TokenRefreshManager with randomized intervals to keep sessions alive
 - Sliding-window rate limiter with per-endpoint tracking and accurate concurrency control
-- SQLite-backed thread and user data cache for fast lookups
 
 **Thread & Group Management**
 - Get thread info, history, pictures, and lists

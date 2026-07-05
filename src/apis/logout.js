@@ -71,12 +71,6 @@ module.exports = function (defaultFuncs, api, ctx) {
       if (typeof ctx._stopCookieBackup === 'function') {
         try { ctx._stopCookieBackup(); } catch (_) {}
       }
-      
-      // Stop auto backup
-      try {
-        const { stopAutoBackup } = require('../database/appStateBackup');
-        stopAutoBackup();
-      } catch (_) {}
 
       // Invalidate the response cache so nothing stale is served after logout.
       if (ctx.cache && typeof ctx.cache.clear === 'function') {

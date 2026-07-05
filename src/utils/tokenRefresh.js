@@ -362,15 +362,6 @@ class TokenRefreshManager {
             } catch (updateErr) {
                 utils.warn("TokenRefresh", "Failed to update appState in re-login manager:", updateErr.message);
             }
-            // Persist the refreshed cookies to the database so that a bot
-            // restart after a token refresh doesn't load stale cookies.
-            try {
-                const { backupAppStateSQL } = require('../database/appStateBackup');
-                await backupAppStateSQL(ctx.jar, ctx.userID);
-                utils.log("TokenRefresh", "AppState persisted to database after token refresh");
-            } catch (backupErr) {
-                utils.warn("TokenRefresh", "Failed to persist AppState after token refresh:", backupErr.message);
-            }
             return true;
         } catch (error) {
             this.failureCount++;
@@ -447,13 +438,7 @@ class TokenRefreshManager {
                     utils.log("TokenRefresh", `Alternative refresh successful via ${endpoint}`);
                     this.lastRefresh = Date.now();
                     this.failureCount = 0;
-                    
-                    // Persist tokens
-                    try {
-                        const { backupAppStateSQL } = require('../database/appStateBackup');
-                        await backupAppStateSQL(ctx.jar, ctx.userID);
-                    } catch (_) {}
-                    
+
                     return true;
                 }
             } catch (error) {
@@ -569,15 +554,7 @@ class TokenRefreshManager {
             
             this.lastCookieRefresh = Date.now();
             utils.log("TokenRefresh", "Cookies refreshed successfully");
-            
-            // Persist updated cookies
-            try {
-                const { backupAppStateSQL } = require('../database/appStateBackup');
-                await backupAppStateSQL(ctx.jar, ctx.userID);
-            } catch (backupErr) {
-                utils.warn("TokenRefresh", "Failed to persist refreshed cookies:", backupErr.message);
-            }
-            
+
             return true;
         } catch (error) {
             utils.warn("TokenRefresh", "Cookie refresh failed:", error.message);

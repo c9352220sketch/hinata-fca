@@ -108,18 +108,6 @@ async function loginHelper(credentials, globalOptions, callback, setOptionsFunc,
 
         let appState = credentials.appState;
 
-        if (!appState && !credentials.email && !credentials.password) {
-            try {
-                const { hydrateJarFromDB } = require('../../database/appStateBackup');
-                const restored = await hydrateJarFromDB(jar, null);
-                if (restored) {
-                    utils.log("Restored AppState from database backup");
-                }
-            } catch (dbErr) {
-                utils.warn("Failed to restore AppState from database:", dbErr.message);
-            }
-        }
-
         if (appState) {
             let cookieStrings = [];
             if (Array.isArray(appState)) {
@@ -231,12 +219,6 @@ async function loginHelper(credentials, globalOptions, callback, setOptionsFunc,
         ctx.region = region;
         utils.log("Detected Facebook region:", region);
 
-        try {
-            const { backupAppStateSQL } = require('../../database/appStateBackup');
-            await backupAppStateSQL(jar, ctx.userID);
-        } catch (backupErr) {
-            utils.warn("Failed to backup AppState to database:", backupErr.message);
-        }
         api.message = new Map();
         api.timestamp = {};
 
@@ -282,24 +264,6 @@ async function loginHelper(credentials, globalOptions, callback, setOptionsFunc,
 
         if (api.nickname && typeof api.nickname === 'function') {
             api.changeNickname = api.nickname;
-        }
-
-        try {
-            const models = require('../../database/models');
-            const threadDataModule = require('../../database/threadData');
-            const userDataModule = require('../../database/userData');
-            
-            models.syncAll().then(() => {
-                utils.log("Database synchronized successfully");
-            }).catch(err => {
-                utils.warn("Failed to sync database:", err.message);
-            });
-
-            api.threadData = threadDataModule(api);
-            api.userData = userDataModule(api);
-            utils.log("Database methods initialized");
-        } catch (dbError) {
-            utils.warn("Database initialization failed (optional feature):", dbError.message);
         }
 
         api.ctx = ctx;
@@ -406,16 +370,6 @@ async function loginHelper(credentials, globalOptions, callback, setOptionsFunc,
                 utils.error("Unhandled Rejection", String(reason && reason.message ? reason.message : reason));
             });
         }
-
-        // Periodic cookie backup (every 15 min) — keeps the database in sync with
-        // the live cookie jar so a restart always loads the freshest cookies.
-        if (ctx._periodicBackupInterval) clearInterval(ctx._periodicBackupInterval);
-        ctx._periodicBackupInterval = setInterval(async () => {
-            try {
-                const { backupAppStateSQL } = require('../../database/appStateBackup');
-                await backupAppStateSQL(jar, ctx.userID);
-            } catch (_) {}
-        }, 15 * 60 * 1000);
 
         api.tokenRefreshManager.startAutoRefresh(ctx, defaultFuncs, fbLinkFunc());
 
@@ -541,15 +495,6 @@ async function loginHelper(credentials, globalOptions, callback, setOptionsFunc,
             };
         } catch (_) {}
         
-        // Start auto backup for session persistence
-        try {
-            const { startAutoBackup } = require('../../database/appStateBackup');
-            startAutoBackup(jar, ctx.userID, 5 * 60 * 1000); // Backup every 5 minutes
-            utils.log("AutoBackup", "Automatic session backup started");
-        } catch (backupErr) {
-            utils.warn("AutoBackup", "Failed to start auto backup:", backupErr.message);
-        }
-
         api.validateSession = async () => {
           const isValid = await api.isSessionValid();
           if (!isValid) {
